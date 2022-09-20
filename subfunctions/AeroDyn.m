@@ -9,67 +9,135 @@ else
 end
 
 %% AeroDyn input file
-fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn.dat'], 'wt');
-fprintf(fid, '------- AERODYN v15.03.* INPUT FILE ------------------------------------------------\n');
-fprintf(fid, 'Created %s.\n', datestr(now));
-fprintf(fid, '======  General Options  ============================================================================\n');
-fprintf(fid, 'False         Echo               - Echo the input to "<rootname>.AD.ech"?  (flag)\n');
-fprintf(fid, '"default"     DTAero             - Time interval for aerodynamic calculations {or "default"} (s)\n');
-fprintf(fid, '          %i   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT}\n', WakeMod);
-fprintf(fid, '          %i   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model}\n', AFAeroMod);
-fprintf(fid, '          0  TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}\n');
-fprintf(fid, 'False          TwrShadow          – Calculate tower influence on wind based on downstream tower shadow? (flag)\n');
-fprintf(fid, 'False           TwrAero            - Calculate tower aerodynamic loads? (flag)\n');
-fprintf(fid, 'False          FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]\n');
-fprintf(fid, '======  Environmental Conditions  ===================================================================\n');
-fprintf(fid, '      %4.3f   AirDens            - Air density (kg/m^3)\n', AirDensity);
-fprintf(fid, '  1.464E-05   KinVisc            - Kinematic air viscosity (m^2/s)\n');
-fprintf(fid, '        335   SpdSound           - Speed of sound (m/s)\n');
-fprintf(fid, '======  Blade-Element/Momentum Theory Options  ====================================================== [used only when WakeMod=1]\n');
-fprintf(fid, '          2   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [used only when WakeMod=1]\n');
-fprintf(fid, 'True          TipLoss            - Use the Prandtl tip-loss model? (flag) [used only when WakeMod=1]\n');
-fprintf(fid, 'True          HubLoss            - Use the Prandtl hub-loss model? (flag) [used only when WakeMod=1]\n');
-fprintf(fid, 'True          TanInd             - Include tangential induction in BEMT calculations? (flag) [used only when WakeMod=1]\n');
-fprintf(fid, 'False         AIDrag             - Include the drag term in the axial-induction calculation? (flag) [used only when WakeMod=1]\n');
-fprintf(fid, 'False         TIDrag             - Include the drag term in the tangential-induction calculation? (flag) [used only when WakeMod=1 and TanInd=TRUE]\n');
-fprintf(fid, '"Default"     IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or "default"} (-) [used only when WakeMod=1]\n');
-fprintf(fid, '        100   MaxIter            - Maximum number of iteration steps (-) [used only when WakeMod=1]\n');
-fprintf(fid, '======  Beddoes-Leishman Unsteady Airfoil Aerodynamics Options  ===================================== [used only when AFAeroMod=2]\n');
-fprintf(fid, '          3   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez’s variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]\n');
-fprintf(fid, 'True          FLookup            - Flag to indicate whether a lookup for f will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when AFAeroMod=2]\n');
-fprintf(fid, '======  Airfoil Information =========================================================================\n');
-fprintf(fid, '          1   InCol_Alfa         - The column in the airfoil tables that contains the angle of attack (-)\n');
-fprintf(fid, '          2   InCol_Cl           - The column in the airfoil tables that contains the lift coefficient (-)\n');
-fprintf(fid, '          3   InCol_Cd           - The column in the airfoil tables that contains the drag coefficient (-)\n');
-fprintf(fid, '          4   InCol_Cm           - The column in the airfoil tables that contains the pitching-moment coefficient; use zero if there is no Cm column (-)\n');
-fprintf(fid, '          0   InCol_Cpmin        - The column in the airfoil tables that contains the Cpmin coefficient; use zero if there is no Cpmin column (-)\n');
-fprintf(fid, '          %i   NumAFfiles         - Number of airfoil files used (-)\n', length(Blade.IFoil));
-fprintf(fid, '"%s"                         AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)\n', 'AeroDyn_Cylinder 1.dat');
-for i = 2:length(Blade.IFoil)
-    fprintf(fid, '"%s"\n', ['AeroDyn_', Airfoil.Name{Blade.IFoil(i)}, '.dat']);
-end
-fprintf(fid, '======  Rotor/Blade Properties  =====================================================================\n');
-fprintf(fid, 'True          UseBlCm            - Include aerodynamic pitching moment in calculations?  (flag)\n');
-fprintf(fid, '"AeroDyn_blade.dat"    ADBlFile(1)        - Name of file containing distributed aerodynamic properties for Blade #1 (-)\n');
-fprintf(fid, '"AeroDyn_blade.dat"    ADBlFile(2)        - Name of file containing distributed aerodynamic properties for Blade #2 (-) [unused if NumBl < 2]\n');
-fprintf(fid, '"AeroDyn_blade.dat"    ADBlFile(3)        - Name of file containing distributed aerodynamic properties for Blade #3 (-) [unused if NumBl < 3]\n');
-fprintf(fid, '======  Tower Influence and Aerodynamics ============================================================= [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]\n');
-fprintf(fid, '          %i   NumTwrNds         - Number of tower nodes used in the analysis  (-) [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]\n', length(Tower.Height));
-fprintf(fid, 'TwrElev        TwrDiam        TwrCd\n');
-fprintf(fid, '(m)              (m)           (-)\n');
-for i = 1:length(Tower.Height)
-    fprintf(fid, '%5.4f    %5.4f    %5.4f\n', Tower.Height(i), Tower.Diameter(i), 0.6);
-end
-fprintf(fid, '======  Outputs  ====================================================================================\n');
-fprintf(fid, 'False         SumPrint            - Generate a summary file listing input options and interpolated properties to "<rootname>.AD.sum"?  (flag)\n');
-fprintf(fid, '          0   NBlOuts             - Number of blade node outputs [0 - 9] (-)\n');
-fprintf(fid, ' 1, 9, 19     BlOutNd             - Blade nodes whose values will be output  (-)\n');
-fprintf(fid, '          0   NTwOuts             - Number of tower node outputs [0 - 9]  (-)\n');
-fprintf(fid, ' 1, 2, 3, 4, 5     TwOutNd             - Tower nodes whose values will be output  (-)\n');
-fprintf(fid, '                   OutList             - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)\n');
-fprintf(fid, 'END of input file (the word "END" must appear in the first 3 columns of this last OutList line)\n');
-fprintf(fid, '---------------------------------------------------------------------------------------\n');
+%% Read Aerodyn file %%%%
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn.dat'], 'r');
+C = textscan(fid,'%s','Delimiter','\r','whitespace', '');
+AeroDynCell = C{1,1};
 fclose(fid);
+[nrows,ncols] = size(AeroDynCell);
+
+% filename = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn.dat'];
+% if exist(filename, 'file')==2
+%   delete(filename);
+% end
+
+%%%%%%%%%%%%%%% Changing values for new turbine %%%%%%%%%%%%%
+
+AeroDynCell{2,1} =  ['Created ', datestr(now), '.'];
+AeroDynCell{6,1} =  ['          ',int2str(WakeMod),'   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT} '];
+AeroDynCell{7,1} =  ['          ', int2str(AFAeroMod),'   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model}'];
+AeroDynCell{13,1} = ['      ',int2str(AirDensity),'   AirDens            - Air density (kg/m^3)'];
+
+AeroDynCell{34,1} = ['          ',int2str(length(Blade.IFoil)),'   NumAFfiles         - Number of airfoil files used (-)']; 
+AeroDynCell{35,1} = sprintf('"%s"                         AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)', 'AeroDyn_Cylinder 1.dat');
+
+St_idx = find(contains(AeroDynCell,'AFNames')) +1;
+End_idx = find(contains(AeroDynCell,'Rotor/Blade'));
+appendcell = AeroDynCell(End_idx:end,1);
+
+AeroDynCell(End_idx:end) = [];
+
+j = St_idx;
+for i = j:j+length(Blade.IFoil)-2
+    AeroDynCell{i,1} = ['"' ,'AeroDyn_', Airfoil.Name{Blade.IFoil(i-j+2)}, '.dat','"' ];
+end
+AeroDynCell (j+length(Blade.IFoil)-1:j+length(Blade.IFoil)+length(appendcell)-2 ) = appendcell(1:end);
+clear appendcell
+
+TwrN_idx = find(contains(AeroDynCell,'NumTwrNds'));
+AeroDynCell{TwrN_idx,1} = ['          ',int2str(length(Tower.Height)),'   NumTwrNds         - Number of tower nodes used in the analysis  (-) [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]'];
+
+formatSpec = '%5.4f \t %5.4f \t %5.4f';
+
+St_idx = find(contains(AeroDynCell,'TwrElev')) +2;
+End_idx = find(contains(AeroDynCell,'Outputs')) ;
+appendcell = AeroDynCell(End_idx:end,1);
+
+AeroDynCell(St_idx:end) = [];
+
+j = St_idx;
+for i = j:j+length(Tower.Height)-1
+    AeroDynCell{i,1} = sprintf(formatSpec,Tower.Height(i-j+1),Tower.Diameter(i-j+1),0.6);
+end
+
+AeroDynCell (j+length(Tower.Height):j+length(Tower.Height)+length(appendcell)-1 ) = appendcell(1:end);
+clear appendcell
+
+
+%%%%%%%%%  Write output file with new values %%%%%%%%%%%%
+formatSpec = '%s\n';
+fidw = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn.dat'], 'w');
+
+
+[nrows,ncols] = size(AeroDynCell);
+
+for row = 1:nrows
+    fprintf(fidw,formatSpec,AeroDynCell{row,1});
+end
+fclose(fidw);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn.dat'], 'wt');
+% fprintf(fid, '------- AERODYN v15.03.* INPUT FILE ------------------------------------------------\n');
+% fprintf(fid, 'Created %s.\n', datestr(now));
+% fprintf(fid, '======  General Options  ============================================================================\n');
+% fprintf(fid, 'False         Echo               - Echo the input to "<rootname>.AD.ech"?  (flag)\n');
+% fprintf(fid, '"default"     DTAero             - Time interval for aerodynamic calculations {or "default"} (s)\n');
+% fprintf(fid, '          %i   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT}\n', WakeMod);
+% fprintf(fid, '          %i   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model}\n', AFAeroMod);
+% fprintf(fid, '          0  TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}\n');
+% fprintf(fid, 'False          TwrShadow          – Calculate tower influence on wind based on downstream tower shadow? (flag)\n');
+% fprintf(fid, 'False           TwrAero            - Calculate tower aerodynamic loads? (flag)\n');
+% fprintf(fid, 'False          FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]\n');
+% fprintf(fid, '======  Environmental Conditions  ===================================================================\n');
+% fprintf(fid, '      %4.3f   AirDens            - Air density (kg/m^3)\n', AirDensity);
+% fprintf(fid, '  1.464E-05   KinVisc            - Kinematic air viscosity (m^2/s)\n');
+% fprintf(fid, '        335   SpdSound           - Speed of sound (m/s)\n');
+% fprintf(fid, '======  Blade-Element/Momentum Theory Options  ====================================================== [used only when WakeMod=1]\n');
+% fprintf(fid, '          2   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [used only when WakeMod=1]\n');
+% fprintf(fid, 'True          TipLoss            - Use the Prandtl tip-loss model? (flag) [used only when WakeMod=1]\n');
+% fprintf(fid, 'True          HubLoss            - Use the Prandtl hub-loss model? (flag) [used only when WakeMod=1]\n');
+% fprintf(fid, 'True          TanInd             - Include tangential induction in BEMT calculations? (flag) [used only when WakeMod=1]\n');
+% fprintf(fid, 'False         AIDrag             - Include the drag term in the axial-induction calculation? (flag) [used only when WakeMod=1]\n');
+% fprintf(fid, 'False         TIDrag             - Include the drag term in the tangential-induction calculation? (flag) [used only when WakeMod=1 and TanInd=TRUE]\n');
+% fprintf(fid, '"Default"     IndToler           - Convergence tolerance for BEMT nonlinear solve residual equation {or "default"} (-) [used only when WakeMod=1]\n');
+% fprintf(fid, '        100   MaxIter            - Maximum number of iteration steps (-) [used only when WakeMod=1]\n');
+% fprintf(fid, '======  Beddoes-Leishman Unsteady Airfoil Aerodynamics Options  ===================================== [used only when AFAeroMod=2]\n');
+% fprintf(fid, '          3   UAMod              - Unsteady Aero Model Switch (switch) {1=Baseline model (Original), 2=Gonzalez’s variant (changes in Cn,Cc,Cm), 3=Minemma/Pierce variant (changes in Cc and Cm)} [used only when AFAeroMod=2]\n');
+% fprintf(fid, 'True          FLookup            - Flag to indicate whether a lookup for f will be calculated (TRUE) or whether best-fit exponential equations will be used (FALSE); if FALSE S1-S4 must be provided in airfoil input files (flag) [used only when AFAeroMod=2]\n');
+% fprintf(fid, '======  Airfoil Information =========================================================================\n');
+% fprintf(fid, '          1   InCol_Alfa         - The column in the airfoil tables that contains the angle of attack (-)\n');
+% fprintf(fid, '          2   InCol_Cl           - The column in the airfoil tables that contains the lift coefficient (-)\n');
+% fprintf(fid, '          3   InCol_Cd           - The column in the airfoil tables that contains the drag coefficient (-)\n');
+% fprintf(fid, '          4   InCol_Cm           - The column in the airfoil tables that contains the pitching-moment coefficient; use zero if there is no Cm column (-)\n');
+% fprintf(fid, '          0   InCol_Cpmin        - The column in the airfoil tables that contains the Cpmin coefficient; use zero if there is no Cpmin column (-)\n');
+% fprintf(fid, '          %i   NumAFfiles         - Number of airfoil files used (-)\n', length(Blade.IFoil));
+% fprintf(fid, '"%s"                         AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)\n', 'AeroDyn_Cylinder 1.dat');
+% for i = 2:length(Blade.IFoil)
+%     fprintf(fid, '"%s"\n', ['AeroDyn_', Airfoil.Name{Blade.IFoil(i)}, '.dat']);
+% end
+% fprintf(fid, '======  Rotor/Blade Properties  =====================================================================\n');
+% fprintf(fid, 'True          UseBlCm            - Include aerodynamic pitching moment in calculations?  (flag)\n');
+% fprintf(fid, '"AeroDyn_blade.dat"    ADBlFile(1)        - Name of file containing distributed aerodynamic properties for Blade #1 (-)\n');
+% fprintf(fid, '"AeroDyn_blade.dat"    ADBlFile(2)        - Name of file containing distributed aerodynamic properties for Blade #2 (-) [unused if NumBl < 2]\n');
+% fprintf(fid, '"AeroDyn_blade.dat"    ADBlFile(3)        - Name of file containing distributed aerodynamic properties for Blade #3 (-) [unused if NumBl < 3]\n');
+% fprintf(fid, '======  Tower Influence and Aerodynamics ============================================================= [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]\n');
+% fprintf(fid, '          %i   NumTwrNds         - Number of tower nodes used in the analysis  (-) [used only when TwrPotent/=0, TwrShadow=True, or TwrAero=True]\n', length(Tower.Height));
+% fprintf(fid, 'TwrElev        TwrDiam        TwrCd\n');
+% fprintf(fid, '(m)              (m)           (-)\n');
+% for i = 1:length(Tower.Height)
+%     fprintf(fid, '%5.4f    %5.4f    %5.4f\n', Tower.Height(i), Tower.Diameter(i), 0.6);
+% end
+% fprintf(fid, '======  Outputs  ====================================================================================\n');
+% fprintf(fid, 'False         SumPrint            - Generate a summary file listing input options and interpolated properties to "<rootname>.AD.sum"?  (flag)\n');
+% fprintf(fid, '          0   NBlOuts             - Number of blade node outputs [0 - 9] (-)\n');
+% fprintf(fid, ' 1, 9, 19     BlOutNd             - Blade nodes whose values will be output  (-)\n');
+% fprintf(fid, '          0   NTwOuts             - Number of tower node outputs [0 - 9]  (-)\n');
+% fprintf(fid, ' 1, 2, 3, 4, 5     TwOutNd             - Tower nodes whose values will be output  (-)\n');
+% fprintf(fid, '                   OutList             - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)\n');
+% fprintf(fid, 'END of input file (the word "END" must appear in the first 3 columns of this last OutList line)\n');
+% fprintf(fid, '---------------------------------------------------------------------------------------\n');
+% fclose(fid);
 
 %% Blade input file
 fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn_blade.dat'], 'wt');
